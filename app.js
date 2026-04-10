@@ -1,78 +1,92 @@
 const statusEl = document.getElementById('status');
-const offerEl = document.getElementById('offer');
-const answerEl = document.getElementById('answer');
+const myCodeEl = document.getElementById('myCode');
+const peerCodeInput = document.getElementById('peerCode');
+const fileSection = document.getElementById('fileSection');
 const fileInput = document.getElementById('fileInput');
-const sendBtn = document.getElementById('sendBtn');
 const downloadLink = document.getElementById('downloadLink');
 
-// Create P2P peer (uses public Google STUN server for discovery)
-const peer = new SimplePeer({
-  initiator: location.hash === '#init', // Auto-make one peer the initiator
-  trickle: false,
-  config: {
-    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] // Free STUN server
-  }
-});
+// Connect to FREE PUBLIC SIGNALING SERVER (no setup needed!)
+const socket = io('https://peer-signal.fly.dev');
 
-// 1. Generate connection code (send to other peer)
-peer.on('signal', data => {
-  offerEl.value = JSON.stringify(data);
-  statusEl.textContent = "Copy the code above and send it to your peer.";
-});
-
-// 2. Connect using peer's code
-window.connectPeer = () => {
-  try {
-    peer.signal(JSON.parse(answerEl.value));
-    statusEl.textContent = "Connecting to peer...";
-  } catch (err) {
-    statusEl.textContent = "Invalid code! Try again.";
+// Generate a random 4-character code (letters + numbers)
+function generateCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTWXYZ23456789'; // No confusing chars (0,O,I,1)
+  let code = '';
+  for (let i = 0; i < 4; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
+  return code;
+}
+
+const myCode = generateCode();
+myCodeEl.textContent = myCode;
+statusEl.textContent = "Share your 4-character code with your peer!";
+
+let peer;
+
+// Connect to peer using their short code
+window.connectToPeer = () => {
+  const peerCode = peerCodeInput.value.trim().toUpperCase();
+  if (!peerCode || peerCode.length !== 4) {
+    statusEl.textContent = "❌ Enter a valid 4-character code!";
+    return;
+  }
+
+  statusEl.textContent = `Connecting to ${peerCode}...`;
+
+  // Create P2P connection
+  peer = new SimplePeer({
+    initiator: true,
+    trickle: false,
+    config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
+  });
+
+  // Send WebRTC data via signaling server (using short code)
+  peer.on('signal', data => {
+    socket.emit('signal', {
+      to: peerCode,
+      from: myCode,
+      data: data
+    });
+  });
+
+  // Receive peer's WebRTC data
+  socket.on('signal', msg => {
+    if (msg.from === peerCode) peer.signal(msg.data);
+  });
+
+  // Connected!
+  peer.on('connect', () => {
+    statusEl.textContent = "✅ Connected! Send files now.";
+    fileSection.style.display = "block";
+  });
+
+  // Receive file
+  peer.on('data', data => {
+    if (typeof data === 'string') {
+      window.fileMeta = JSON.parse(data);
+      statusEl.textContent = `Receiving ${window.fileMeta.name}...`;
+      return;
+    }
+    const blob = new Blob([data]);
+    downloadLink.href = URL.createObjectURL(blob);
+    downloadLink.download = window.fileMeta.name;
+    downloadLink.textContent = `✅ Download ${window.fileMeta.name}`;
+    downloadLink.style.display = "block";
+    statusEl.textContent = "File received!";
+  });
 };
 
-// 3. Peer connected!
-peer.on('connect', () => {
-  statusEl.textContent = "✅ Connected! You can now send files.";
-  fileInput.disabled = false;
-  sendBtn.disabled = false;
-});
-
-// 4. Send file
+// Send file
 window.sendFile = () => {
   const file = fileInput.files[0];
   if (!file) return alert("Select a file first!");
-
-  statusEl.textContent = `Sending: ${file.name}...`;
-  
-  // Send file metadata + data
-  peer.send(JSON.stringify({ name: file.name, size: file.size }));
-  
+  peer.send(JSON.stringify({ name: file.name }));
   const reader = new FileReader();
   reader.onload = () => peer.send(reader.result);
   reader.readAsArrayBuffer(file);
 };
 
-// 5. Receive file
-peer.on('data', data => {
-  if (typeof data === 'string') {
-    // First message: file info
-    window.fileMeta = JSON.parse(data);
-    statusEl.textContent = `Receiving: ${window.fileMeta.name}...`;
-    return;
-  }
-
-  // Second message: file data
-  const blob = new Blob([data]);
-  downloadLink.href = URL.createObjectURL(blob);
-  downloadLink.download = window.fileMeta.name;
-  downloadLink.textContent = `✅ Download ${window.fileMeta.name}`;
-  downloadLink.style.display = "block";
-  statusEl.textContent = "File received!";
-});
-
 // Error handling
-peer.on('error', err => {
-  statusEl.textContent = `Error: ${err.message}`;
-  console.error(err);
-});
+peer?.on('error', err => statusEl.textContent = `Error: ${err.message}`);
 
