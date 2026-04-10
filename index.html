@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>P2P File Transfer</title>
+    <style>
+        body { font-family: Arial; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+        #status { margin: 1rem 0; color: #666; }
+        #fileInput { margin: 1rem 0; }
+        #downloadLink { display: none; margin-top: 1rem; padding: 0.5rem; background: #e3f2fd; }
+    </style>
+</head>
+<body>
+    <h1>Simple P2P File Transfer</h1>
+    <div id="status">Connecting...</div>
+
+    <!-- Connection Code (copy/paste between peers) -->
+    <div>
+        <h3>Connection Code (send to your peer):</h3>
+        <textarea id="offer" rows="4" readonly></textarea>
+        <h3>Paste Peer's Code Here:</h3>
+        <textarea id="answer" rows="4" placeholder="Paste code here..."></textarea>
+        <button onclick="connectPeer()">Connect</button>
+    </div>
+
+    <hr>
+
+    <!-- File Upload -->
+    <input type="file" id="fileInput" disabled>
+    <button onclick="sendFile()" id="sendBtn" disabled>Send File</button>
+
+    <!-- Received File Download -->
+    <a id="downloadLink" download></a>
+
+    <!-- Simple Peer Library (WebRTC) -->
+    <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simplepeer.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
+
