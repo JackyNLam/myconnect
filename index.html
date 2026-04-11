@@ -4,31 +4,35 @@
     <title>P2P File Transfer (Short Code)</title>
     <style>
         body { font-family: Arial; max-width: 500px; margin: 3rem auto; padding: 0 1rem; text-align: center; }
-        .code { font-size: 2.2rem; font-weight: bold; color: #1976D2; margin: 1rem 0; letter-spacing: 6px; }
-        #status { margin: 1.5rem 0; color: #333; font-size: 1.1rem; min-height: 20px; }
-        input { font-size: 1.6rem; width: 160px; text-align: center; padding: 0.6rem; text-transform: uppercase; }
-        button { padding: 0.7rem 1.4rem; margin: 0.5rem; background: #1976D2; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; }
+        .code { font-size: 2rem; font-weight: bold; color: #2196F3; margin: 1rem 0; letter-spacing: 4px; }
+        #status { margin: 1.5rem 0; color: #444; }
+        input { font-size: 1.5rem; width: 140px; text-align: center; padding: 0.5rem; }
+        button { padding: 0.6rem 1.2rem; margin: 0.5rem; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer; }
         #fileSection { display: none; margin-top: 2rem; }
-        #downloadLink { display: none; margin: 1rem auto; padding: 1rem; background: #E8F5E9; max-width: 320px; text-decoration: none; color: #2E7D32; font-weight: bold; }
+        #downloadLink { display: none; margin: 1rem auto; padding: 0.8rem; background: #e8f5e9; max-width: 300px; }
     </style>
 </head>
 <body>
-    <h1>Direct P2P File Transfer</h1>
+    <h1>Send Files P2P</h1>
     <div id="status">Loading your connection code...</div>
 
-    <h3>Your 4-Character Code:</h3>
-    <div class="code" id="myCode">----</div>
+    <!-- YOUR TINY CONNECTION CODE (4 characters) -->
+    <h3>Your Code:</h3>
+    <div class="code" id="myCode">- - - -</div>
 
+    <!-- CONNECT TO PEER WITH THEIR TINY CODE -->
     <h3>Enter Peer's Code:</h3>
     <input type="text" id="peerCode" maxlength="4" placeholder="XXXX" autocomplete="off">
     <button onclick="connectToPeer()">Connect</button>
 
+    <!-- FILE TRANSFER (shows after connection) -->
     <div id="fileSection">
-        <input type="file" id="fileInput" style="margin:1rem 0;">
+        <input type="file" id="fileInput">
         <button onclick="sendFile()">Send File</button>
         <a id="downloadLink"></a>
     </div>
 
+    <!-- Libraries: SimplePeer + Socket.IO (for tiny codes) -->
     <script src="https://cdn.jsdelivr.net/npm/simple-peer@9.11.1/simple-peer.min.js"></script>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="app.js"></script>
