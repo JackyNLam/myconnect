@@ -6,7 +6,7 @@ const fileInput = document.getElementById('fileInput');
 const downloadLink = document.getElementById('downloadLink');
 
 // Connect to my own vps
-const socket = io('https://43.99.17.165:6039');
+const socket = io('http://43.99.17.165:6039');
 
 // Generate a random 4-character code (letters + numbers)
 function generateCode() {
